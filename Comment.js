@@ -11,11 +11,9 @@ try {
 }
 mongoose.set('useCreateIndex', true);
 
-ObjectId = Schema.ObjectId
-
 // creating the comment schema with all necessary fields
 const CommentSchema = new Schema({
-    blogpostID : {type: ObjectId, required: true},
+    blogPostTitle : {type: String, required: true},
     username: {type: String, required: true, index: {unique: true}},
     quote: {type: String},
 

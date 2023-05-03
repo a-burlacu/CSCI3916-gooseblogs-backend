@@ -268,29 +268,28 @@ router.route('/blogposts')
 // review route for posting a review, and getting all comments
 router.route('/comment')
     .post(authJwtController.isAuthenticated,function(req, res){ // in posting a review, we get info from the req body and do error checking
-        let newReview = new Review();
-        newReview.movieID = req.body.movieID;
-        newReview.name = req.body.name;
-        newReview.quote = req.body.quote;
-        newReview.rating = req.body.rating;
+        let newComment = new Comment();
+        newComment.blogPostTitle = req.body.blogPostTitle;
+        newComment.username = req.body.username;
+        newComment.quote = req.body.quote;
 
-        if(newReview.movieID === "" || newReview.name === "" || newReview.rating === "" || newReview.rating <= 0 || newReview.rating > 5){
-            return res.status(400).send({success: false, msg: "Cannot post a review without the name of the movie, the name of the reviewer, and a rating of 1-5 stars."});
+        if(newComment.blogPostTitle === "" || newComment.username === "" || newComment.quote === ""){
+            return res.status(400).send({success: false, msg: "Cannot post a comment without the name of the original blog post, the name of the poster, and a rating of 1-5 stars."});
         }
         else{
-            Movie.findOne({title: newReview.movieID}, function(err, movie){ // find if movie even exists first
+            BlogPost.findOne({blogPostTitle: newComment.blogPostTitle}, function(err, blogpost){ // find if blogpost even exists first
                 if(err) {
                     return res.status(400).json(err);
                 }
-                else if(!movie){
-                    return res.status(400).json({success: false, msg: "Movie does not exist!"});
+                else if(!blogpost){
+                    return res.status(400).json({success: false, msg: "Blog post does not exist!"});
                 }
                 else{
-                    newReview.save(function(err){
+                    newComment.save(function(err){
                         if(err){
                             return res.status(400).json(err);
                         }
-                        return res.status(200).json({success: true, msg: 'Successfully posted a review.'});
+                        return res.status(200).json({success: true, msg: 'Successfully posted a comment.'});
                     });
                 }
             })
