@@ -102,9 +102,9 @@ router.post('/signin', function (req, res) {
     })
 });
 
-// movie parameter routes where we also check review query
+// blogpost parameter routes where we also check review query
 router.route('/blogposts/*')
-    .get(authJwtController.isAuthenticated, function(req, res){ // on GET, get the specific movie based off the param
+    .get(authJwtController.isAuthenticated, function(req, res){ // on GET, get the specific blogpost based off the param
         BlogPost.findOne({title: req.params['0']}, function(err, blogpost){
             if(err) {
                 return res.status(400).json(err);
@@ -114,7 +114,7 @@ router.route('/blogposts/*')
             }
             else{
                 if(req.query.comments === "true"){ // checking the review query param
-                    BlogPost.aggregate([ // using the $match and $lookup aggregation methods, we can join the reviews collection for a specific blogpost
+                    BlogPost.aggregate([ // using the $match and $lookup aggregation methods, we can join the comments collection for a specific blogpost
                         {
                             $match: {
                                 title: req.params['0']
@@ -151,7 +151,7 @@ router.route('/blogposts/*')
                         }
                     })
                 }
-                else{ // if reviews=false, we just return the blogpost
+                else{ // if comments=false, we just return the blogpost
                     return res.status(200).json(blogpost);
                 }
             }
@@ -171,7 +171,7 @@ router.route('/blogposts/*')
     .post(authJwtController.isAuthenticated, function(req, res){
         return res.status(400).send({success: false, msg: 'POST Denied on /movieparameter'});
     })
-    // for DELETE, delete a movie
+    // for DELETE, delete a blogpost
     .delete(authJwtController.isAuthenticated, function(req, res){
         BlogPost.deleteOne({title: req.params['0']}, null, function(err, data){
             if(err){
@@ -183,23 +183,23 @@ router.route('/blogposts/*')
         });
     })
 
-// movie routes with review query
+// blogpost routes with review query
 router.route('/blogposts')
-    .delete(authJwtController.isAuthenticated, function(req, res){ // fail on the /movies DELETE
-            return res.status(400).send({success: false, msg: 'DELETE Denied on /movies'});
+    .delete(authJwtController.isAuthenticated, function(req, res){ // fail on the /blogposts DELETE
+            return res.status(400).send({success: false, msg: 'DELETE Denied on /blogposts'});
         }
     )
-    .put(authJwtController.isAuthenticated, function(req, res){ // fail on the /movies PUT
-            return res.status(400).send({success: false, msg: 'PUT Denied on /movies'});
+    .put(authJwtController.isAuthenticated, function(req, res){ // fail on the /blogposts PUT
+            return res.status(400).send({success: false, msg: 'PUT Denied on /blogposts'});
         }
     )
-    .get(authJwtController.isAuthenticated, function(req, res){ // in GET, we want to return all movies in the collection
+    .get(authJwtController.isAuthenticated, function(req, res){ // in GET, we want to return all blogposts in the collection
             BlogPost.find({}, (err, blogposts) => {
                 if(err)
                     return res.status(400).json(err);
                 else{
                     if(req.query.comments === "true"){ // checking the review query param
-                        BlogPost.aggregate([ // using the $lookup aggregation method, we can join the reviews collection for all blogposts
+                        BlogPost.aggregate([ // using the $lookup aggregation method, we can join the comments collection for all blogposts
                             {
                                 $lookup: {
                                     from: "comments",
@@ -231,13 +231,13 @@ router.route('/blogposts')
                         })
                     }
                     else{
-                        return res.json(blogposts); // otherwise, if reviews=false, we just return all blogposts
+                        return res.json(blogposts); // otherwise, if comments=false, we just return all blogposts
                     }
                 }
             })
         }
     )
-    .post(authJwtController.isAuthenticated,function(req, res) { // in POST, we want to save a single movie
+    .post(authJwtController.isAuthenticated,function(req, res) { // in POST, we want to save a single blogpost
             let newBlogPost = new BlogPost();
             newBlogPost.title = req.body.title;
             newBlogPost.username = req.body.username;
@@ -249,7 +249,7 @@ router.route('/blogposts')
                 return res.status(400).send({success: false, msg: "Cannot save a new post object that does not have all required fields."});
             }
             // else if(newBlogPost.actors.length < 3){
-            //     return res.status(400).send({success: false, msg: "Cannot save a new movie object without at least 3 actors."})
+            //     return res.status(400).send({success: false, msg: "Cannot save a new blogpost object without at least 3 actors."})
             // }
             else{
                 newBlogPost.save(function(err){
@@ -265,7 +265,7 @@ router.route('/blogposts')
         }
     );
 
-// review route for posting a review, and getting all reviews
+// review route for posting a review, and getting all comments
 router.route('/comment')
     .post(authJwtController.isAuthenticated,function(req, res){ // in posting a review, we get info from the req body and do error checking
         let newComment = new Comment();
@@ -277,7 +277,7 @@ router.route('/comment')
             return res.status(400).send({success: false, msg: "Cannot post a comment without the blogpostID, the name of the original poster, and a comment body."});
         }
         else{
-            BlogPost.findOne({title: newComment.blogpostID}, function(err, blogpost){ // find if movie even exists first
+            BlogPost.findOne({title: newComment.blogpostID}, function(err, blogpost){ // find if blogpost even exists first
                 if(err) {
                     return res.status(400).json(err);
                 }
@@ -295,12 +295,12 @@ router.route('/comment')
             })
         }
     })
-    .get(authJwtController.isAuthenticated, function(req, res){ // in getting a review, we print out all reviews in the database collection
-        Comment.find({}, (err, reviews) => {
+    .get(authJwtController.isAuthenticated, function(req, res){ // in getting a review, we print out all comments in the database collection
+        Comment.find({}, (err, comments) => {
             if(err)
                 return res.status(400).json(err);
             else
-                return res.json(reviews);
+                return res.json(comments);
         })
     });
 
