@@ -123,9 +123,9 @@ router.route('/blogposts/*')
                         {
                             $lookup: {
                                 from: "comments",
-                                localField: "_id",
-                                foreignField: "blogpostID",
-                                as: "blogPostComments"
+                                localField: "title",
+                                foreignField: "blogpostTitle",
+                                as: "blogpostComments"
                             }
                         },
                         // {
