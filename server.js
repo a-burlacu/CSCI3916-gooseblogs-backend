@@ -123,7 +123,7 @@ router.route('/blogposts/*')
                         {
                             $lookup: {
                                 from: "comments",
-                                localField: "._id",
+                                localField: "_id",
                                 foreignField: "blogpostID",
                                 as: "blogPostComments"
                             }
@@ -203,7 +203,7 @@ router.route('/blogposts')
                             {
                                 $lookup: {
                                     from: "comments",
-                                    localField: "._id",
+                                    localField: "_id",
                                     foreignField: "blogpostID",
                                     as: "blogPostComments"
                                 }
@@ -267,34 +267,44 @@ router.route('/blogposts')
 
 // review route for posting a review, and getting all comments
 router.route('/comment')
-    .post(authJwtController.isAuthenticated,function(req, res){ // in posting a review, we get info from the req body and do error checking
-        let newComment = new Comment();
-        newComment.blogpostID = req.body.blogpostID;
-        newComment.username = req.body.username;
-        newComment.quote = req.body.quote;
+    .post(authJwtController.isAuthenticated, (req, res) => {
+        if (!req.body.title || !req.body.username || !req.body.quote) {
 
-        if(newComment.blogpostID === "" || newComment.username === "" || newComment.quote === ""){
-            return res.status(400).send({success: false, msg: "Cannot post a comment without the blogpostID, the name of the original poster, and a comment body."});
+            res.status(401).send({success: false, msg: 'Include title, username and comment body.'})
+
         }
-        else{
-            BlogPost.findOne({title: newComment.blogpostID}, function(err, blogpost){ // find if blogpost even exists first
-                if(err) {
-                    return res.status(400).json(err);
+
+        var newComment = new Comment();
+
+        var commentPost = new BlogPost();
+        commentPost.title = req.body.title;
+
+        BlogPost.findOne({ title: commentPost.title }).select('title').exec(function(err, blogpost) {
+            if (err) {
+                res.send(err);
+            }
+            if (blogpost == null){
+                return res.json({ success: false, message: 'Comment could not be created. Blog Post not found.'});
+            }
+            res.status(200);
+
+            newComment.movieId = blogpost._id;
+            newComment.username = req.user.username;
+            newComment.review = req.body.review;
+            newComment.rating = req.body.rating;
+
+            newComment.save(function(err) {
+                if (err) {
+                    if (err.code == 11000)
+                        return res.json({ success: false, message: 'A review with that description already exists.'});
+                    else
+                        return res.json(err);
                 }
-                else if(!blogpost){
-                    return res.status(400).json({success: false, msg: "BlogPost does not exist!"});
-                }
-                else{
-                    newComment.save(function(err){
-                        if(err){
-                            return res.status(400).json(err);
-                        }
-                        return res.status(200).json({success: true, msg: 'Successfully created a comment.'});
-                    });
-                }
+                res.json({success: true, msg: 'Successfully added review.'})
             })
-        }
+        });
     })
+
     .get(authJwtController.isAuthenticated, function(req, res){ // in getting a review, we print out all comments in the database collection
         Comment.find({}, (err, comments) => {
             if(err)
