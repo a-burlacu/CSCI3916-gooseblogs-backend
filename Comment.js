@@ -11,15 +11,16 @@ try {
 }
 mongoose.set('useCreateIndex', true);
 
-// creating the review schema with all necessary fields
-const ReviewSchema = new Schema({
-    movieID : {type: String, required: true},
-    name: {type: String, required: true, index: {unique: true}},
+ObjectId = Schema.ObjectId
+
+// creating the comment schema with all necessary fields
+const CommentSchema = new Schema({
+    blogpostID : {type: ObjectId, required: true},
+    username: {type: String, required: true, index: {unique: true}},
     quote: {type: String},
-    rating: {type: Number, required: true, min: 1, max: 5}
 
 });
 
 
 //return the model to server
-module.exports = mongoose.model('Review', ReviewSchema);
+module.exports = mongoose.model('Comment', CommentSchema);

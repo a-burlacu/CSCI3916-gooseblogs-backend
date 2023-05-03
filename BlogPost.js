@@ -11,18 +11,14 @@ try {
 }
 mongoose.set('useCreateIndex', true);
 
-// creating the movie schema with all necessary fields
-const MovieSchema = new Schema({
+// creating the blog post schema with all necessary fields
+const BlogPostSchema = new Schema({
     title: {type: String, required: true, index: {unique: true}},
-    year: {type: Number, required: true},
-    genre: {type: String, required: true},
-    actors: {type: [{
-            actorName: String,
-            charName: String
-        }], required: true},
+    username: {type: String, required: true},
+    postBody: {type: String, required: true},
     imageUrl: {type: String, required: true}
 });
 
 
 //return the model to server
-module.exports = mongoose.model('Movie', MovieSchema);
+module.exports = mongoose.model('Movie', BlogPostSchema);

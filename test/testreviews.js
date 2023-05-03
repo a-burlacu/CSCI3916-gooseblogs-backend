@@ -4,8 +4,8 @@ let chai = require('chai');
 let chaiHttp = require('chai-http');
 let server = require('../server');
 let User = require('../Users');
-let Movie = require('../Movies');
-let Review = require('../Reviews');
+let Movie = require('../BlogPost');
+let Review = require('../Comment');
 chai.should();
 
 chai.use(chaiHttp);
