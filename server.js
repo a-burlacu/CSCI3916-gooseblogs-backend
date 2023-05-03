@@ -103,18 +103,18 @@ router.post('/signin', function (req, res) {
 });
 
 // movie parameter routes where we also check review query
-router.route('/movies/*')
+router.route('/blogposts/*')
     .get(authJwtController.isAuthenticated, function(req, res){ // on GET, get the specific movie based off the param
-        BlogPost.findOne({title: req.params['0']}, function(err, movie){
+        BlogPost.findOne({title: req.params['0']}, function(err, blogpost){
             if(err) {
                 return res.status(400).json(err);
             }
-            else if(!movie){
+            else if(!blogpost){
                 return res.status(400).json({success: false, msg: "BlogPost does not exist!"});
             }
             else{
-                if(req.query.reviews === "true"){ // checking the review query param
-                    BlogPost.aggregate([ // using the $match and $lookup aggregation methods, we can join the reviews collection for a specific movie
+                if(req.query.comments === "true"){ // checking the review query param
+                    BlogPost.aggregate([ // using the $match and $lookup aggregation methods, we can join the reviews collection for a specific blogpost
                         {
                             $match: {
                                 title: req.params['0']
@@ -122,37 +122,37 @@ router.route('/movies/*')
                         },
                         {
                             $lookup: {
-                                from: "reviews",
-                                localField: "title",
-                                foreignField: "movieID",
-                                as: "movieReviews"
+                                from: "comments",
+                                localField: "._id",
+                                foreignField: "blogpostID",
+                                as: "blogPostComments"
                             }
                         },
-                        {
-                            // get the average rating as a new field on the aggregate
-                            $addFields:
-                                {
-                                    avgRating: {$avg: "$movieReviews.rating"}
-                                }
-
-                        },
-                        {
-                            $sort:
-                                {
-                                    avgRating: -1
-                                }
-                        }
-                    ]).exec(function(err, movieReviews){
+                        // {
+                        //     // get the average rating as a new field on the aggregate
+                        //     $addFields:
+                        //         {
+                        //             avgRating: {$avg: "$blogPostComments.rating"}
+                        //         }
+                        //
+                        // },
+                        // {
+                        //     $sort:
+                        //         {
+                        //             avgRating: -1
+                        //         }
+                        // }
+                    ]).exec(function(err, blogPostComments){
                         if(err){
                             return res.status(400).json(err)
                         }
                         else {
-                            return res.status(200).json(movieReviews);
+                            return res.status(200).json(blogPostComments);
                         }
                     })
                 }
-                else{ // if reviews=false, we just return the movie
-                    return res.status(200).json(movie);
+                else{ // if reviews=false, we just return the blogpost
+                    return res.status(200).json(blogpost);
                 }
             }
         })
@@ -184,7 +184,7 @@ router.route('/movies/*')
     })
 
 // movie routes with review query
-router.route('/movies')
+router.route('/blogposts')
     .delete(authJwtController.isAuthenticated, function(req, res){ // fail on the /movies DELETE
             return res.status(400).send({success: false, msg: 'DELETE Denied on /movies'});
         }
@@ -194,18 +194,18 @@ router.route('/movies')
         }
     )
     .get(authJwtController.isAuthenticated, function(req, res){ // in GET, we want to return all movies in the collection
-            BlogPost.find({}, (err, movies) => {
+            BlogPost.find({}, (err, blogposts) => {
                 if(err)
                     return res.status(400).json(err);
                 else{
-                    if(req.query.reviews === "true"){ // checking the review query param
-                        BlogPost.aggregate([ // using the $lookup aggregation method, we can join the reviews collection for all movies
+                    if(req.query.comments === "true"){ // checking the review query param
+                        BlogPost.aggregate([ // using the $lookup aggregation method, we can join the reviews collection for all blogposts
                             {
                                 $lookup: {
-                                    from: "reviews",
-                                    localField: "title",
-                                    foreignField: "movieID",
-                                    as: "movieReviews"
+                                    from: "comments",
+                                    localField: "._id",
+                                    foreignField: "blogpostID",
+                                    as: "blogPostComments"
                                 }
                             },
                             {
@@ -231,7 +231,7 @@ router.route('/movies')
                         })
                     }
                     else{
-                        return res.json(movies); // otherwise, if reviews=false, we just return all movies
+                        return res.json(blogposts); // otherwise, if reviews=false, we just return all blogposts
                     }
                 }
             })
@@ -266,7 +266,7 @@ router.route('/movies')
     );
 
 // review route for posting a review, and getting all reviews
-router.route('/review')
+router.route('/comment')
     .post(authJwtController.isAuthenticated,function(req, res){ // in posting a review, we get info from the req body and do error checking
         let newComment = new Comment();
         newComment.blogpostID = req.body.blogpostID;
