@@ -21,4 +21,4 @@ const BlogPostSchema = new Schema({
 
 
 //return the model to server
-module.exports = mongoose.model('Movie', BlogPostSchema);
+module.exports = mongoose.model('BlogPost', BlogPostSchema);
