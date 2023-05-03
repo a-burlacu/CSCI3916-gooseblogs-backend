@@ -13,7 +13,7 @@ mongoose.set('useCreateIndex', true);
 
 // creating the comment schema with all necessary fields
 const CommentSchema = new Schema({
-    blogPostTitle : {type: String, required: true},
+    blogpostTitle : {type: String, required: true},
     username: {type: String, required: true, index: {unique: true}},
     quote: {type: String},
 

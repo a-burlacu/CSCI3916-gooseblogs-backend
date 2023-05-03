@@ -113,7 +113,7 @@ router.route('/blogposts/*')
                 return res.status(400).json({success: false, msg: "BlogPost does not exist!"});
             }
             else{
-                if(req.query.comments === "true"){ // checking the review query param
+                if(req.query.comment === "true"){ // checking the review query param
                     BlogPost.aggregate([ // using the $match and $lookup aggregation methods, we can join the comments collection for a specific blogpost
                         {
                             $match: {
@@ -169,7 +169,7 @@ router.route('/blogposts/*')
         })
     })
     .post(authJwtController.isAuthenticated, function(req, res){
-        return res.status(400).send({success: false, msg: 'POST Denied on /movieparameter'});
+        return res.status(400).send({success: false, msg: 'POST Denied on /blogpostparameter'});
     })
     // for DELETE, delete a blogpost
     .delete(authJwtController.isAuthenticated, function(req, res){
@@ -203,24 +203,24 @@ router.route('/blogposts')
                             {
                                 $lookup: {
                                     from: "comments",
-                                    localField: "_id",
-                                    foreignField: "blogpostID",
+                                    localField: "title",
+                                    foreignField: "blogpostTitle",
                                     as: "blogPostComments"
                                 }
                             },
-                            {
-                                // get the average rating as a new field on the aggregate
-                                $addFields:
-                                    {
-                                        avgRating: {$avg: "$movieReviews.rating"}
-                                    }
-                            },
-                            {
-                                $sort:
-                                    {
-                                        avgRating: -1
-                                    }
-                            }
+                            // {
+                            //     // get the average rating as a new field on the aggregate
+                            //     $addFields:
+                            //         {
+                            //             avgRating: {$avg: "$movieReviews.rating"}
+                            //         }
+                            // },
+                            // {
+                            //     $sort:
+                            //         {
+                            //             avgRating: -1
+                            //         }
+                            // }
                         ]).exec(function(err, movieReviews){
                             if(err){
                                 return res.status(400).json(err)
@@ -269,15 +269,15 @@ router.route('/blogposts')
 router.route('/comment')
     .post(authJwtController.isAuthenticated,function(req, res){ // in posting a review, we get info from the req body and do error checking
         let newComment = new Comment();
-        newComment.blogPostTitle = req.body.blogPostTitle;
+        newComment.blogpostTitle = req.body.blogpostTitle;
         newComment.username = req.body.username;
         newComment.quote = req.body.quote;
 
-        if(newComment.blogPostTitle === "" || newComment.username === "" || newComment.quote === ""){
+        if(newComment.blogpostTitle === "" || newComment.username === "" || newComment.quote === ""){
             return res.status(400).send({success: false, msg: "Cannot post a comment without the name of the original blog post, the name of the poster, and a rating of 1-5 stars."});
         }
         else{
-            BlogPost.findOne({blogPostTitle: newComment.blogPostTitle}, function(err, blogpost){ // find if blogpost even exists first
+            BlogPost.findOne({blogpostTitle: newComment.blogpostTitle}, function(err, blogpost){ // find if blogpost even exists first
                 if(err) {
                     return res.status(400).json(err);
                 }
