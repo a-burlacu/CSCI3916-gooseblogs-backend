@@ -6,8 +6,8 @@ var authJwtController = require('./auth_jwt');
 var jwt = require('jsonwebtoken');
 var cors = require('cors');
 var User = require('./Users');
-var Movie = require('./BlogPost');
-var Review = require('./Comment');
+var BlogPost = require('./BlogPost');
+var Comment = require('./Comment');
 
 var app = express();
 app.use(cors());
@@ -105,16 +105,16 @@ router.post('/signin', function (req, res) {
 // movie parameter routes where we also check review query
 router.route('/movies/*')
     .get(authJwtController.isAuthenticated, function(req, res){ // on GET, get the specific movie based off the param
-        Movie.findOne({title: req.params['0']}, function(err, movie){
+        BlogPost.findOne({title: req.params['0']}, function(err, movie){
             if(err) {
                 return res.status(400).json(err);
             }
             else if(!movie){
-                return res.status(400).json({success: false, msg: "Movie does not exist!"});
+                return res.status(400).json({success: false, msg: "BlogPost does not exist!"});
             }
             else{
                 if(req.query.reviews === "true"){ // checking the review query param
-                    Movie.aggregate([ // using the $match and $lookup aggregation methods, we can join the reviews collection for a specific movie
+                    BlogPost.aggregate([ // using the $match and $lookup aggregation methods, we can join the reviews collection for a specific movie
                         {
                             $match: {
                                 title: req.params['0']
@@ -159,7 +159,7 @@ router.route('/movies/*')
     })
     .put(authJwtController.isAuthenticated, function(req, res){
         let update = req.body;
-        Movie.findOneAndUpdate({title: req.params['0']}, update, {new: true}, function(err, data){
+        BlogPost.findOneAndUpdate({title: req.params['0']}, update, {new: true}, function(err, data){
             if(err){
                 return res.status(400).json(err);
             }
@@ -173,12 +173,12 @@ router.route('/movies/*')
     })
     // for DELETE, delete a movie
     .delete(authJwtController.isAuthenticated, function(req, res){
-        Movie.deleteOne({title: req.params['0']}, null, function(err, data){
+        BlogPost.deleteOne({title: req.params['0']}, null, function(err, data){
             if(err){
                 return res.status(400).json(err);
             }
             else{
-                return res.status(200).json({success: true, msg: 'Movie is deleted!'});
+                return res.status(200).json({success: true, msg: 'BlogPost is deleted!'});
             }
         });
     })
@@ -194,12 +194,12 @@ router.route('/movies')
         }
     )
     .get(authJwtController.isAuthenticated, function(req, res){ // in GET, we want to return all movies in the collection
-            Movie.find({}, (err, movies) => {
+            BlogPost.find({}, (err, movies) => {
                 if(err)
                     return res.status(400).json(err);
                 else{
                     if(req.query.reviews === "true"){ // checking the review query param
-                        Movie.aggregate([ // using the $lookup aggregation method, we can join the reviews collection for all movies
+                        BlogPost.aggregate([ // using the $lookup aggregation method, we can join the reviews collection for all movies
                             {
                                 $lookup: {
                                     from: "reviews",
@@ -238,29 +238,28 @@ router.route('/movies')
         }
     )
     .post(authJwtController.isAuthenticated,function(req, res) { // in POST, we want to save a single movie
-            let newMovie = new Movie();
-            newMovie.title = req.body.title;
-            newMovie.year = req.body.year;
-            newMovie.genre = req.body.genre;
-            newMovie.actors = req.body.actors;
-            newMovie.imageUrl = req.body.imageUrl;
+            let newBlogPost = new BlogPost();
+            newBlogPost.title = req.body.title;
+            newBlogPost.username = req.body.username;
+            newBlogPost.postBody = req.body.postBody;
+            newBlogPost.imageUrl = req.body.imageUrl;
 
-            if(newMovie.title === "" || newMovie.year === "" || newMovie.genre === "" || // error checking
-                newMovie.actors === ""){
-                return res.status(400).send({success: false, msg: "Cannot save a new movie object that does not have all required fields."});
+            if(newBlogPost.title === "" || newBlogPost.username === "" || newBlogPost.postBody === "" || // error checking
+                newBlogPost.imageUrl === ""){
+                return res.status(400).send({success: false, msg: "Cannot save a new post object that does not have all required fields."});
             }
-            else if(newMovie.actors.length < 3){
-                return res.status(400).send({success: false, msg: "Cannot save a new movie object without at least 3 actors."})
-            }
+            // else if(newBlogPost.actors.length < 3){
+            //     return res.status(400).send({success: false, msg: "Cannot save a new movie object without at least 3 actors."})
+            // }
             else{
-                newMovie.save(function(err){
+                newBlogPost.save(function(err){
                     if(err) {
                         if (err.code == 11000)
-                            return res.status(400).json({success: false, message: 'This movie already exists!'});
+                            return res.status(400).json({success: false, message: 'This post already exists!'});
                         else
                             return res.json(err);
                     }
-                    return res.status(200).json({success: true, msg: 'Successfully saved new movie.'});
+                    return res.status(200).json({success: true, msg: 'Successfully saved new post.'});
                 });
             }
         }
@@ -269,36 +268,35 @@ router.route('/movies')
 // review route for posting a review, and getting all reviews
 router.route('/review')
     .post(authJwtController.isAuthenticated,function(req, res){ // in posting a review, we get info from the req body and do error checking
-        let newReview = new Review();
-        newReview.movieID = req.body.movieID;
-        newReview.name = req.body.name;
-        newReview.quote = req.body.quote;
-        newReview.rating = req.body.rating;
+        let newComment = new Comment();
+        newComment.blogpostID = req.body.blogpostID;
+        newComment.username = req.body.username;
+        newComment.quote = req.body.quote;
 
-        if(newReview.movieID === "" || newReview.name === "" || newReview.rating === "" || newReview.rating <= 0 || newReview.rating > 5){
-            return res.status(400).send({success: false, msg: "Cannot post a review without the name of the movie, the name of the reviewer, and a rating of 1-5 stars."});
+        if(newComment.blogpostID === "" || newComment.username === "" || newComment.quote === ""){
+            return res.status(400).send({success: false, msg: "Cannot post a comment without the blogpostID, the name of the original poster, and a comment body."});
         }
         else{
-            Movie.findOne({title: newReview.movieID}, function(err, movie){ // find if movie even exists first
+            BlogPost.findOne({title: newComment.blogpostID}, function(err, blogpost){ // find if movie even exists first
                 if(err) {
                     return res.status(400).json(err);
                 }
-                else if(!movie){
-                    return res.status(400).json({success: false, msg: "Movie does not exist!"});
+                else if(!blogpost){
+                    return res.status(400).json({success: false, msg: "BlogPost does not exist!"});
                 }
                 else{
-                    newReview.save(function(err){
+                    newComment.save(function(err){
                         if(err){
                             return res.status(400).json(err);
                         }
-                        return res.status(200).json({success: true, msg: 'Successfully posted a review.'});
+                        return res.status(200).json({success: true, msg: 'Successfully created a comment.'});
                     });
                 }
             })
         }
     })
     .get(authJwtController.isAuthenticated, function(req, res){ // in getting a review, we print out all reviews in the database collection
-        Review.find({}, (err, reviews) => {
+        Comment.find({}, (err, reviews) => {
             if(err)
                 return res.status(400).json(err);
             else
