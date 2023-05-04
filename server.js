@@ -350,7 +350,7 @@ router.route('/comment')
     })
 
     .delete(authJwtController.isAuthenticated, function(req, res){
-        Comment.deleteOne({blogpostTitle: req.params['0']} && {username: this.username}, null, function(err, data){
+        Comment.deleteOne({blogpostTitle: req.body.title} && {username: this.username}, null, function(err, data){
             if(err){
                 return res.status(400).json(err);
         }
