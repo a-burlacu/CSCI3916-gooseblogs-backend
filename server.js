@@ -245,7 +245,7 @@ router.route('/blogposts')
     .post(authJwtController.isAuthenticated,function(req, res) {
             let newBlogPost = new BlogPost();
             newBlogPost.title = req.body.title;
-            newBlogPost.username = req.body.username;
+            newBlogPost.username = req.user.username;
             newBlogPost.postBody = req.body.postBody;
             newBlogPost.imageUrl = req.body.imageUrl;
 
