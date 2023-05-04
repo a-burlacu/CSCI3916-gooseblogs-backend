@@ -113,7 +113,7 @@ router.route('/blogposts/*')
                 return res.status(400).json({success: false, msg: "BlogPost does not exist!"});
             }
             else{
-                if(req.query.comment === "true"){ // checking the review query param
+                if(req.query.comments === "true"){ // checking the review query param
                     BlogPost.aggregate([ // using the $match and $lookup aggregation methods, we can join the comments collection for a specific blogpost
                         {
                             $match: {
