@@ -349,15 +349,22 @@ router.route('/comment')
         })
     })
 
-    .delete(authJwtController.isAuthenticated, function(req, res){
+    .delete(authJwtController.isAuthenticated, function(req, res) {
 
-        Comment.deleteOne({blogpostTitle: req.body.title}, null, function(err, data){
-            if(err){
+        Comment.findOne({blogpostTitle: req.body.title}, function (err, comment) {
+            if (err) {
                 return res.status(400).json(err);
-        }
-        else{
-            return res.status(200).json({success: true, msg: 'Comment was deleted!'});
-        }
+            } else if (!comment) {
+                return res.status(400).json({success: false, msg: "Blog post does not exist!"});
+            } else {
+                Comment.deleteOne({username: req.user.username}, null, function (err, data) {
+                    if (err) {
+                        return res.status(400).json(err);
+                    } else {
+                        return res.status(200).json({success: true, msg: 'Comment was deleted!'});
+                    }
+                })
+            }
         })
     });
 
