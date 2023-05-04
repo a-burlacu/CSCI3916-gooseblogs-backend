@@ -102,7 +102,7 @@ router.post('/signin', function (req, res) {
     })
 });
 
-// blogpost parameter routes where we also check review query
+// blogpost parameter routes where we also check comment query
 router.route('/blogposts/*')
     .get(authJwtController.isAuthenticated, function(req, res){ // on GET, get the specific blogpost based off the param
         BlogPost.findOne({title: req.params['0']}, function(err, blogpost){
@@ -113,7 +113,7 @@ router.route('/blogposts/*')
                 return res.status(400).json({success: false, msg: "BlogPost does not exist!"});
             }
             else{
-                if(req.query.comments === "true"){ // checking the review query param
+                if(req.query.comments === "true"){ // checking the comment query param
                     BlogPost.aggregate([ // using the $match and $lookup aggregation methods, we can join the comments collection for a specific blogpost
                         {
                             $match: {
@@ -168,10 +168,11 @@ router.route('/blogposts/*')
             }
         })
     })
+    // fail on post with blogpost/:title
     .post(authJwtController.isAuthenticated, function(req, res){
         return res.status(400).send({success: false, msg: 'POST Denied on /blogpostparameter'});
     })
-    // for DELETE, delete a blogpost
+    //  delete a blogpost by title
     .delete(authJwtController.isAuthenticated, function(req, res){
         BlogPost.deleteOne({title: req.params['0']}, null, function(err, data){
             if(err){
@@ -183,8 +184,9 @@ router.route('/blogposts/*')
         });
     })
 
-// blogpost routes with review query
+// blogpost routes with comments query
 router.route('/blogposts')
+
     .delete(authJwtController.isAuthenticated, function(req, res){ // fail on the /blogposts DELETE
             return res.status(400).send({success: false, msg: 'DELETE Denied on /blogposts'});
         }
@@ -193,7 +195,8 @@ router.route('/blogposts')
             return res.status(400).send({success: false, msg: 'PUT Denied on /blogposts'});
         }
     )
-    .get(authJwtController.isAuthenticated, function(req, res){ // in GET, we want to return all blogposts in the collection
+    // gets all blogposts in collection, aggregates with comments
+    .get(authJwtController.isAuthenticated, function(req, res){
             BlogPost.find({}, (err, blogposts) => {
                 if(err)
                     return res.status(400).json(err);
@@ -237,7 +240,8 @@ router.route('/blogposts')
             })
         }
     )
-    .post(authJwtController.isAuthenticated,function(req, res) { // in POST, we want to save a single blogpost
+    // saves a single blogpost
+    .post(authJwtController.isAuthenticated,function(req, res) {
             let newBlogPost = new BlogPost();
             newBlogPost.title = req.body.title;
             newBlogPost.username = req.body.username;
@@ -265,7 +269,7 @@ router.route('/blogposts')
         }
     );
 
-// review route for posting a review, and getting all comments
+// comment route for posting a comment, getting all comments, and deleting a comment
 router.route('/comment')
     .post(authJwtController.isAuthenticated,function(req, res){ // in posting a review, we get info from the req body and do error checking
         let newComment = new Comment();
@@ -333,12 +337,26 @@ router.route('/comment')
     //     });
     // })
 
-    .get(authJwtController.isAuthenticated, function(req, res){ // in getting a review, we print out all comments in the database collection
+    // get all comments for all blogposts
+    .get(authJwtController.isAuthenticated, function(req, res){
         Comment.find({}, (err, comments) => {
-            if(err)
+            if(err) {
                 return res.status(400).json(err);
-            else
+            }
+            else {
                 return res.json(comments);
+            }
+        })
+    })
+
+    .delete(authJwtController.isAuthenticated, function(req, res){
+        Comment.deleteOne({blogpostTitle: req.params['0']}, null, function(err, data){
+            if(err){
+                return res.status(400).json(err);
+        }
+        else{
+            return res.status(200).json({success: true, msg: 'Comment was deleted!'});
+        }
         })
     });
 
