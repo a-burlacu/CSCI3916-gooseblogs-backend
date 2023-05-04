@@ -9,6 +9,7 @@ var User = require('./Users');
 var BlogPost = require('./BlogPost');
 var Comment = require('./Comment');
 
+
 var app = express();
 app.use(cors());
 app.use(bodyParser.json());
@@ -274,7 +275,7 @@ router.route('/comment')
     .post(authJwtController.isAuthenticated,function(req, res){ // in posting a review, we get info from the req body and do error checking
         let newComment = new Comment();
         newComment.blogpostTitle = req.body.blogpostTitle;
-        newComment.username = req.body.username;
+        newComment.username = req.user.username;
         newComment.quote = req.body.quote;
 
         if(newComment.blogpostTitle === "" || newComment.username === "" || newComment.quote === ""){
