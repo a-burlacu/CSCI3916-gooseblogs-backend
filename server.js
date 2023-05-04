@@ -351,7 +351,7 @@ router.route('/comment')
 
     .delete(authJwtController.isAuthenticated, function(req, res) {
 
-        Comment.findOne({blogpostTitle: req.body.title}, function (err, comment) {
+        Comment.find({blogpostTitle: req.body.title}, function (err, comment) {
             if (err) {
                 return res.status(400).json(err);
             } else if (!comment) {
