@@ -277,7 +277,7 @@ router.route('/comment')
             return res.status(400).send({success: false, msg: "Cannot post a comment without the name of the original blog post, the name of the poster, and a rating of 1-5 stars."});
         }
         else{
-            BlogPost.findOne({blogpostTitle: newComment.blogpostTitle}, function(err, blogpost){ // find if blogpost even exists first
+            BlogPost.findOne({title: newComment.blogpostTitle}, function(err, blogpost){ // find if blogpost even exists first
                 if(err) {
                     return res.status(400).json(err);
                 }
