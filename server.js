@@ -143,12 +143,12 @@ router.route('/blogposts/*')
                         //             avgRating: -1
                         //         }
                         // }
-                    ]).exec(function(err, blogPostComments){
+                    ]).exec(function(err, blogpostComments){
                         if(err){
                             return res.status(400).json(err)
                         }
                         else {
-                            return res.status(200).json(blogPostComments);
+                            return res.status(200).json(blogpostComments);
                         }
                     })
                 }
@@ -209,7 +209,7 @@ router.route('/blogposts')
                                     from: "comments",
                                     localField: "title",
                                     foreignField: "blogpostTitle",
-                                    as: "blogPostComments"
+                                    as: "blogpostComments"
                                 }
                             },
                             // {
@@ -225,12 +225,12 @@ router.route('/blogposts')
                             //             avgRating: -1
                             //         }
                             // }
-                        ]).exec(function(err, movieReviews){
+                        ]).exec(function(err, blogpostComments){
                             if(err){
                                 return res.status(400).json(err)
                             }
                             else {
-                                return res.status(200).json(movieReviews);
+                                return res.status(200).json(blogpostComments);
                             }
                         })
                     }
