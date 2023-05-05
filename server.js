@@ -211,7 +211,7 @@ router.route('/blogposts')
                                     foreignField: "blogpostTitle",
                                     as: "blogpostComments"
                                 }
-                            },
+                            }
                             // {
                             //     // get the average rating as a new field on the aggregate
                             //     $addFields:
